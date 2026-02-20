@@ -38,6 +38,7 @@ class FortuneService:
             calendar_type=birth.calendar_type.value,
             is_leap_month=birth.is_leap_month,
             use_night_zi=birth.use_night_zi,
+            use_true_solar_time=birth.use_true_solar_time,
         )
 
     def _get_target_period_info(

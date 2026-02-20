@@ -44,6 +44,7 @@ class SajuCalculateResponse(BaseModel):
     da_yun_list: list[DaYunResponse]
     element_counts: dict[str, int]
     used_night_zi: bool
+    used_true_solar_time: bool
     birth_time_unknown: bool
 
 

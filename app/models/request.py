@@ -15,6 +15,7 @@ class BirthInput(BaseModel):
     calendar_type: CalendarType = CalendarType.SOLAR
     is_leap_month: bool = Field(False, description="Leap month flag (lunar calendar only)")
     use_night_zi: bool = Field(True, description="Use night zi (야자시) approach")
+    use_true_solar_time: bool = Field(False, description="Use true solar time (진태양시) correction")
 
 
 class SajuCalculateRequest(BaseModel):

@@ -34,6 +34,7 @@ class CompatibilityService:
             calendar_type=birth.calendar_type.value,
             is_leap_month=birth.is_leap_month,
             use_night_zi=birth.use_night_zi,
+            use_true_solar_time=birth.use_true_solar_time,
         )
 
     async def analyze(

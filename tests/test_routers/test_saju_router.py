@@ -107,6 +107,75 @@ class TestSajuCalculateEndpoint:
         assert set(counts.keys()) == {"木", "火", "土", "金", "水"}
         assert sum(counts.values()) == 8
 
+    async def test_calculate_with_true_solar_time(self, client: AsyncClient):
+        """use_true_solar_time=true should be accepted and reflected in response."""
+        response = await client.post(
+            "/api/v1/saju/calculate",
+            json={
+                "birth": {
+                    "year": 1997,
+                    "month": 1,
+                    "day": 5,
+                    "hour": 9,
+                    "minute": 5,
+                    "gender": "male",
+                    "calendar_type": "solar",
+                    "use_true_solar_time": True,
+                }
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["used_true_solar_time"] is True
+
+    async def test_calculate_without_true_solar_time_default(self, client: AsyncClient):
+        """Default should have used_true_solar_time=false."""
+        response = await client.post(
+            "/api/v1/saju/calculate",
+            json={
+                "birth": {
+                    "year": 1990,
+                    "month": 5,
+                    "day": 15,
+                    "hour": 14,
+                    "gender": "male",
+                }
+            },
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert data["used_true_solar_time"] is False
+
+    async def test_calculate_true_solar_time_changes_result(self, client: AsyncClient):
+        """Boundary case: 09:05 -> 08:33 changes time pillar."""
+        resp_normal = await client.post(
+            "/api/v1/saju/calculate",
+            json={
+                "birth": {
+                    "year": 1997, "month": 1, "day": 5,
+                    "hour": 9, "minute": 5,
+                    "gender": "male",
+                    "use_true_solar_time": False,
+                }
+            },
+        )
+        resp_tst = await client.post(
+            "/api/v1/saju/calculate",
+            json={
+                "birth": {
+                    "year": 1997, "month": 1, "day": 5,
+                    "hour": 9, "minute": 5,
+                    "gender": "male",
+                    "use_true_solar_time": True,
+                }
+            },
+        )
+        assert resp_normal.status_code == 200
+        assert resp_tst.status_code == 200
+        normal_time = resp_normal.json()["time_pillar"]["zhi"]
+        tst_time = resp_tst.json()["time_pillar"]["zhi"]
+        assert normal_time != tst_time
+
     async def test_calculate_response_has_da_yun(self, client: AsyncClient):
         response = await client.post(
             "/api/v1/saju/calculate",

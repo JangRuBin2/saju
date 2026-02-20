@@ -12,6 +12,7 @@ from app.engine.constants import (
 from app.engine.models import DaYunInfo, PillarInfo, SajuData
 from app.engine.night_zi import get_sect_value
 from app.engine.summer_time import adjust_for_dst
+from app.engine.true_solar_time import adjust_for_true_solar_time
 from app.middleware.error_handler import (
     InvalidBirthDateError,
     LeapMonthError,
@@ -34,6 +35,7 @@ class SajuCalculator:
         calendar_type: str = "solar",
         is_leap_month: bool = False,
         use_night_zi: bool = True,
+        use_true_solar_time: bool = False,
     ) -> SajuData:
         """Calculate complete saju data from birth information.
 
@@ -71,6 +73,14 @@ class SajuCalculator:
         solar_year, solar_month, solar_day, hour, minute = adjust_for_dst(
             solar_year, solar_month, solar_day, hour, minute,
         )
+
+        # Apply true solar time correction (after DST)
+        if use_true_solar_time:
+            solar_year, solar_month, solar_day, hour, minute = (
+                adjust_for_true_solar_time(
+                    solar_year, solar_month, solar_day, hour, minute,
+                )
+            )
 
         # Rebuild solar with corrected time
         solar = Solar(solar_year, solar_month, solar_day, hour, minute, 0)
@@ -143,6 +153,7 @@ class SajuCalculator:
             da_yun_list=da_yun_list,
             element_counts=element_counts,
             used_night_zi=use_night_zi,
+            used_true_solar_time=use_true_solar_time,
             birth_time_unknown=birth_time_unknown,
         )
 

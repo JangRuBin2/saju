@@ -136,6 +136,52 @@ class TestSajuCalculator:
         assert result.year_pillar.zhi_kor == "오"
         assert result.day_master_kor == "경"
 
+    def test_true_solar_time_default_false(self, calc: SajuCalculator):
+        """By default, true solar time should not be used."""
+        result = calc.calculate(
+            year=1990, month=5, day=15, hour=14, minute=30,
+            gender_male=True, calendar_type="solar",
+        )
+        assert result.used_true_solar_time is False
+
+    def test_true_solar_time_changes_time_pillar(self, calc: SajuCalculator):
+        """1997-01-05 09:05 with true solar time should shift to 08:33 (jin-shi).
+
+        Without true solar time: 09:05 -> si-shi (巳時, 9-11)
+        With true solar time: 08:33 -> jin-shi (辰時, 7-9)
+        """
+        result_normal = calc.calculate(
+            year=1997, month=1, day=5, hour=9, minute=5,
+            gender_male=True, calendar_type="solar",
+            use_true_solar_time=False,
+        )
+        result_tst = calc.calculate(
+            year=1997, month=1, day=5, hour=9, minute=5,
+            gender_male=True, calendar_type="solar",
+            use_true_solar_time=True,
+        )
+
+        # Time pillars should differ
+        assert result_normal.time_pillar.zhi != result_tst.time_pillar.zhi
+        assert result_tst.used_true_solar_time is True
+
+    def test_true_solar_time_no_change_far_from_boundary(self, calc: SajuCalculator):
+        """14:30 - 32min = 13:58, both in mi-shi (未時, 13-15). Pillars unchanged."""
+        result_normal = calc.calculate(
+            year=1990, month=5, day=15, hour=14, minute=30,
+            gender_male=True, calendar_type="solar",
+        )
+        result_tst = calc.calculate(
+            year=1990, month=5, day=15, hour=14, minute=30,
+            gender_male=True, calendar_type="solar",
+            use_true_solar_time=True,
+        )
+
+        # Same shi-chen, so time pillar should be the same
+        assert result_normal.time_pillar.gan == result_tst.time_pillar.gan
+        assert result_normal.time_pillar.zhi == result_tst.time_pillar.zhi
+        assert result_tst.used_true_solar_time is True
+
     def test_extra_info_present(self, calc: SajuCalculator):
         """TaiYuan, MingGong, ShenGong should be present."""
         result = calc.calculate(

@@ -72,4 +72,5 @@ class SajuData:
 
     # Options used
     used_night_zi: bool
+    used_true_solar_time: bool
     birth_time_unknown: bool

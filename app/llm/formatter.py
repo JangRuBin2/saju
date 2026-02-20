@@ -11,6 +11,8 @@ def format_saju_for_prompt(data: SajuData) -> str:
 
     if not data.birth_time_unknown:
         lines.append(f"출생시각: {data.solar_hour}시 {data.solar_minute}분")
+        if data.used_true_solar_time:
+            lines.append("(진태양시 적용: KST 기준 서울 경도 127도E 보정, 약 -32분)")
     else:
         lines.append("출생시각: 미상 (삼주 해석)")
 

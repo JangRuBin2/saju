@@ -38,6 +38,7 @@ class SajuService:
             calendar_type=birth.calendar_type.value,
             is_leap_month=birth.is_leap_month,
             use_night_zi=birth.use_night_zi,
+            use_true_solar_time=birth.use_true_solar_time,
         )
 
     async def reading(self, birth: BirthInput) -> tuple[SajuData, str]:
@@ -49,6 +50,7 @@ class SajuService:
             year=saju.solar_year, month=saju.solar_month, day=saju.solar_day,
             hour=saju.solar_hour, minute=saju.solar_minute,
             gender=birth.gender.value, night_zi=birth.use_night_zi,
+            true_solar_time=birth.use_true_solar_time,
         )
 
         cached = await self._cache.get(cache_key)
