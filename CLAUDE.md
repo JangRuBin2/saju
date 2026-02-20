@@ -5,6 +5,21 @@
 사주(四柱) 만세력 계산 + LLM 해석 API 서버. Python 3.11+ / FastAPI / lunar-python / Anthropic Claude.
 핵심 원칙: **계산(만세력)과 해석(LLM)의 완전 분리**
 
+## Modular Rules
+
+상세 가이드라인은 `.claude/rules/`에 있습니다:
+
+| Rule File | Contents |
+|-----------|----------|
+| architecture.md | 시스템 아키텍처, 요청 흐름, 캐시/DB 전략 |
+| coding-style.md | 불변성, 파일 구조, 에러 처리 |
+| security.md | 보안 체크, 시크릿/PII 관리 |
+| testing.md | TDD 워크플로우, 80% 커버리지 |
+| git-workflow.md | 커밋 포맷, PR 워크플로우 |
+| agents.md | 에이전트 오케스트레이션 |
+| patterns.md | API 응답, 서비스 패턴, 캐시 키 |
+| performance.md | 모델 선택, 컨텍스트 관리, 비용 최적화 |
+
 ## Critical Rules
 
 ### 1. Code Organization
