@@ -25,15 +25,18 @@ class SajuCalculateRequest(BaseModel):
 class SajuReadingRequest(BaseModel):
     birth: BirthInput
     stream: bool = Field(False, description="Enable SSE streaming")
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
 
 
 class SinsalRequest(BaseModel):
     birth: BirthInput
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
 
 
 class CompatibilityRequest(BaseModel):
     person1: BirthInput
     person2: BirthInput
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
 
 
 class FortuneRequest(BaseModel):
@@ -41,3 +44,10 @@ class FortuneRequest(BaseModel):
     target_year: int | None = None
     target_month: int | None = None
     target_day: int | None = None
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
+
+
+class CelebrityCompatibilityRequest(BaseModel):
+    birth: BirthInput
+    celebrity_id: str = Field(..., description="Celebrity unique ID (e.g. 'karina-aespa')")
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")

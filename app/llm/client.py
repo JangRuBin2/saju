@@ -18,11 +18,19 @@ class LLMClient:
     def __init__(self, client: AsyncAnthropic | None = None):
         self._client = client
 
-    async def generate(self, user_prompt: str) -> str:
+    @staticmethod
+    def _apply_language(prompt: str, language: str) -> str:
+        """Prepend a language instruction when language is not Korean."""
+        if language == "ko":
+            return prompt
+        return f"[IMPORTANT: You MUST respond entirely in {language}.]\n\n{prompt}"
+
+    async def generate(self, user_prompt: str, *, language: str = "ko") -> str:
         """Generate a complete response (non-streaming)."""
         if self._client is None:
             raise LLMError("Anthropic client not configured. Set ANTHROPIC_API_KEY.")
 
+        final_prompt = self._apply_language(user_prompt, language)
         try:
             response = await self._client.messages.create(
                 model=settings.llm_model,
@@ -35,7 +43,7 @@ class LLMClient:
                         "cache_control": {"type": "ephemeral"},
                     }
                 ],
-                messages=[{"role": "user", "content": user_prompt}],
+                messages=[{"role": "user", "content": final_prompt}],
             )
             return response.content[0].text
         except LLMError:
@@ -44,11 +52,14 @@ class LLMClient:
             logger.error("LLM generation failed", exc_info=True)
             raise LLMError(f"LLM request failed: {exc}") from exc
 
-    async def generate_stream(self, user_prompt: str) -> AsyncIterator[str]:
+    async def generate_stream(
+        self, user_prompt: str, *, language: str = "ko",
+    ) -> AsyncIterator[str]:
         """Generate a streaming response, yielding text chunks."""
         if self._client is None:
             raise LLMError("Anthropic client not configured. Set ANTHROPIC_API_KEY.")
 
+        final_prompt = self._apply_language(user_prompt, language)
         try:
             async with self._client.messages.stream(
                 model=settings.llm_model,
@@ -61,7 +72,7 @@ class LLMClient:
                         "cache_control": {"type": "ephemeral"},
                     }
                 ],
-                messages=[{"role": "user", "content": user_prompt}],
+                messages=[{"role": "user", "content": final_prompt}],
             ) as stream:
                 async for text in stream.text_stream:
                     yield text

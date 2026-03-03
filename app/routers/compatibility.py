@@ -18,7 +18,9 @@ async def analyze(
     saju_service: SajuService = Depends(get_saju_service),
 ) -> CompatibilityResponse:
     """Analyze compatibility between two people."""
-    saju1, saju2, interpretation = await service.analyze(request.person1, request.person2)
+    saju1, saju2, interpretation = await service.analyze(
+        request.person1, request.person2, language=request.language,
+    )
     return CompatibilityResponse(
         person1=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         person2=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),

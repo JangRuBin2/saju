@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sse_starlette.sse import EventSourceResponse
 
 from app.dependencies import get_saju_service
@@ -25,14 +25,19 @@ async def calculate(
 
 @router.post("/reading")
 async def reading(
-    request: SajuReadingRequest,
+    request_body: SajuReadingRequest,
+    request: Request,
     service: SajuService = Depends(get_saju_service),
 ):
     """Full saju reading with LLM interpretation. Supports SSE streaming."""
-    if request.stream:
-        return await _streaming_reading(request, service)
+    reading_type = getattr(request.state, "reading_type", "saju_reading")
 
-    saju, interpretation = await service.reading(request.birth)
+    if request_body.stream:
+        return await _streaming_reading(request_body, service, reading_type)
+
+    saju, interpretation = await service.reading(
+        request_body.birth, reading_type, language=request_body.language,
+    )
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
         interpretation=interpretation,
@@ -42,8 +47,11 @@ async def reading(
 async def _streaming_reading(
     request: SajuReadingRequest,
     service: SajuService,
+    reading_type: str = "saju_reading",
 ) -> EventSourceResponse:
-    saju, text_stream = await service.reading_stream(request.birth)
+    saju, text_stream = await service.reading_stream(
+        request.birth, reading_type, language=request.language,
+    )
 
     async def event_generator():
         # First event: calculation result
@@ -67,11 +75,15 @@ async def _streaming_reading(
 
 @router.post("/sinsal", response_model=SajuReadingResponse)
 async def sinsal(
-    request: SinsalRequest,
+    request_body: SinsalRequest,
+    request: Request,
     service: SajuService = Depends(get_saju_service),
 ) -> SajuReadingResponse:
     """Sinsal (신살) analysis."""
-    saju, interpretation = await service.reading(request.birth)
+    reading_type = getattr(request.state, "reading_type", "sinsal")
+    saju, interpretation = await service.reading(
+        request_body.birth, reading_type, language=request_body.language,
+    )
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
         interpretation=interpretation,

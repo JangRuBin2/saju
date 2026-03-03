@@ -25,7 +25,7 @@ async def monthly_fortune(
     target_month = request.target_month or today.month
 
     saju, interpretation, target_date = await service.monthly(
-        request.birth, target_year, target_month
+        request.birth, target_year, target_month, language=request.language,
     )
     return FortuneResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),
@@ -47,7 +47,7 @@ async def daily_fortune(
     target_day = request.target_day or today.day
 
     saju, interpretation, target_date = await service.daily(
-        request.birth, target_year, target_month, target_day
+        request.birth, target_year, target_month, target_day, language=request.language,
     )
     return FortuneResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),

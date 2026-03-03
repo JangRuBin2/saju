@@ -38,9 +38,23 @@ class CompatibilityService:
         )
 
     async def analyze(
-        self, person1: BirthInput, person2: BirthInput
+        self,
+        person1: BirthInput,
+        person2: BirthInput,
+        *,
+        prompt_template: str | None = None,
+        prompt_kwargs: dict[str, str] | None = None,
+        language: str = "ko",
     ) -> tuple[SajuData, SajuData, str]:
-        """Analyze compatibility between two people."""
+        """Analyze compatibility between two people.
+
+        Args:
+            person1: First person's birth input.
+            person2: Second person's birth input.
+            prompt_template: Custom prompt template. Falls back to COMPATIBILITY_PROMPT.
+            prompt_kwargs: Extra format kwargs merged into the prompt template.
+            language: Response language code (e.g. 'ko', 'en', 'ja').
+        """
         saju1 = self._calculate_person(person1)
         saju2 = self._calculate_person(person2)
 
@@ -50,17 +64,22 @@ class CompatibilityService:
             p1_h=saju1.solar_hour, p1_g=person1.gender.value,
             p2_y=saju2.solar_year, p2_m=saju2.solar_month, p2_d=saju2.solar_day,
             p2_h=saju2.solar_hour, p2_g=person2.gender.value,
+            lang=language,
         )
 
         cached = await self._cache.get(cache_key)
         if cached:
             return saju1, saju2, cached
 
-        prompt = COMPATIBILITY_PROMPT.format(
-            person1_data=format_saju_for_prompt(saju1),
-            person2_data=format_saju_for_prompt(saju2),
-        )
-        interpretation = await self._llm.generate(prompt)
+        template = prompt_template if prompt_template is not None else COMPATIBILITY_PROMPT
+        format_args: dict[str, str] = {
+            "person1_data": format_saju_for_prompt(saju1),
+            "person2_data": format_saju_for_prompt(saju2),
+        }
+        if prompt_kwargs:
+            format_args = {**format_args, **prompt_kwargs}
+        prompt = template.format(**format_args)
+        interpretation = await self._llm.generate(prompt, language=language)
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
         return saju1, saju2, interpretation

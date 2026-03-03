@@ -8,7 +8,7 @@ from app.engine.calculator import SajuCalculator
 from app.engine.models import SajuData
 from app.llm.client import LLMClient
 from app.llm.formatter import format_saju_for_prompt
-from app.llm.prompts.saju_reading import SAJU_READING_PROMPT
+from app.llm.prompts.reading_types import get_prompt_for_type
 from app.models.request import BirthInput
 from app.services.cache_service import CacheService
 
@@ -41,7 +41,13 @@ class SajuService:
             use_true_solar_time=birth.use_true_solar_time,
         )
 
-    async def reading(self, birth: BirthInput) -> tuple[SajuData, str]:
+    async def reading(
+        self,
+        birth: BirthInput,
+        reading_type: str = "saju_reading",
+        *,
+        language: str = "ko",
+    ) -> tuple[SajuData, str]:
         """Calculate and generate full interpretation."""
         saju = self.calculate(birth)
 
@@ -51,23 +57,33 @@ class SajuService:
             hour=saju.solar_hour, minute=saju.solar_minute,
             gender=birth.gender.value, night_zi=birth.use_night_zi,
             true_solar_time=birth.use_true_solar_time,
+            reading_type=reading_type,
+            lang=language,
         )
 
         cached = await self._cache.get(cache_key)
         if cached:
             return saju, cached
 
-        prompt = SAJU_READING_PROMPT.format(saju_data=format_saju_for_prompt(saju))
-        interpretation = await self._llm.generate(prompt)
+        prompt_template = get_prompt_for_type(reading_type)
+        prompt = prompt_template.format(saju_data=format_saju_for_prompt(saju))
+        interpretation = await self._llm.generate(prompt, language=language)
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
         return saju, interpretation
 
-    async def reading_stream(self, birth: BirthInput) -> tuple[SajuData, AsyncIterator[str]]:
+    async def reading_stream(
+        self,
+        birth: BirthInput,
+        reading_type: str = "saju_reading",
+        *,
+        language: str = "ko",
+    ) -> tuple[SajuData, AsyncIterator[str]]:
         """Calculate and stream interpretation."""
         saju = self.calculate(birth)
-        prompt = SAJU_READING_PROMPT.format(saju_data=format_saju_for_prompt(saju))
-        return saju, self._llm.generate_stream(prompt)
+        prompt_template = get_prompt_for_type(reading_type)
+        prompt = prompt_template.format(saju_data=format_saju_for_prompt(saju))
+        return saju, self._llm.generate_stream(prompt, language=language)
 
     def saju_to_dict(self, saju: SajuData) -> dict:
         """Convert SajuData to a serializable dict matching SajuCalculateResponse."""

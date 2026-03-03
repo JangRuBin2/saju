@@ -62,7 +62,12 @@ class FortuneService:
         return "\n".join(lines)
 
     async def monthly(
-        self, birth: BirthInput, target_year: int, target_month: int
+        self,
+        birth: BirthInput,
+        target_year: int,
+        target_month: int,
+        *,
+        language: str = "ko",
     ) -> tuple[SajuData, str, str]:
         """Generate monthly fortune."""
         saju = self._calculate_person(birth)
@@ -73,6 +78,7 @@ class FortuneService:
             y=saju.solar_year, m=saju.solar_month, d=saju.solar_day,
             h=saju.solar_hour, g=birth.gender.value,
             ty=target_year, tm=target_month,
+            lang=language,
         )
 
         cached = await self._cache.get(cache_key)
@@ -84,13 +90,19 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_period=period_info,
         )
-        interpretation = await self._llm.generate(prompt)
+        interpretation = await self._llm.generate(prompt, language=language)
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
         return saju, interpretation, target_date_str
 
     async def daily(
-        self, birth: BirthInput, target_year: int, target_month: int, target_day: int
+        self,
+        birth: BirthInput,
+        target_year: int,
+        target_month: int,
+        target_day: int,
+        *,
+        language: str = "ko",
     ) -> tuple[SajuData, str, str]:
         """Generate daily fortune."""
         saju = self._calculate_person(birth)
@@ -101,6 +113,7 @@ class FortuneService:
             y=saju.solar_year, m=saju.solar_month, d=saju.solar_day,
             h=saju.solar_hour, g=birth.gender.value,
             ty=target_year, tm=target_month, td=target_day,
+            lang=language,
         )
 
         cached = await self._cache.get(cache_key)
@@ -112,7 +125,7 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_period=period_info,
         )
-        interpretation = await self._llm.generate(prompt)
+        interpretation = await self._llm.generate(prompt, language=language)
 
         # Daily fortune cache until end of day
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
