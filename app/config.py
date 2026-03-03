@@ -24,5 +24,9 @@ class Settings(BaseSettings):
     cache_ttl_interpretation: int = 3600  # 1 hour
     cache_ttl_fortune: int = 86400  # until end of target date
 
+    # Service Token Authentication
+    api_secret_key: str = ""
+    require_service_token: bool = True
+
 
 settings = Settings()
