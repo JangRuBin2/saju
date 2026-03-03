@@ -8,6 +8,7 @@ from app.config import settings
 from app.engine.calculator import SajuCalculator
 from app.llm.client import LLMClient
 from app.services.cache_service import CacheService
+from app.services.celebrity_service import CelebrityService
 from app.services.compatibility_service import CompatibilityService
 from app.services.fortune_service import FortuneService
 from app.services.saju_service import SajuService
@@ -21,12 +22,13 @@ _cache_service: CacheService | None = None
 _saju_service: SajuService | None = None
 _compatibility_service: CompatibilityService | None = None
 _fortune_service: FortuneService | None = None
+_celebrity_service: CelebrityService | None = None
 
 
 async def init_dependencies() -> None:
     """Initialize all dependencies on app startup."""
     global _calculator, _llm_client, _cache_service
-    global _saju_service, _compatibility_service, _fortune_service
+    global _saju_service, _compatibility_service, _fortune_service, _celebrity_service
 
     _calculator = SajuCalculator()
 
@@ -57,6 +59,7 @@ async def init_dependencies() -> None:
     _saju_service = SajuService(_calculator, _llm_client, _cache_service)
     _compatibility_service = CompatibilityService(_calculator, _llm_client, _cache_service)
     _fortune_service = FortuneService(_calculator, _llm_client, _cache_service)
+    _celebrity_service = CelebrityService(_compatibility_service)
 
 
 
@@ -80,3 +83,8 @@ def get_compatibility_service() -> CompatibilityService:
 def get_fortune_service() -> FortuneService:
     assert _fortune_service is not None
     return _fortune_service
+
+
+def get_celebrity_service() -> CelebrityService:
+    assert _celebrity_service is not None
+    return _celebrity_service

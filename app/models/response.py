@@ -70,6 +70,26 @@ class HealthResponse(BaseModel):
     version: str = "0.1.0"
 
 
+class CelebrityInfo(BaseModel):
+    id: str
+    name_ko: str
+    name_en: str
+    group: str
+
+
+class CelebritySearchResponse(BaseModel):
+    results: list[CelebrityInfo]
+    count: int
+
+
+class CelebrityCompatibilityResponse(BaseModel):
+    user: SajuCalculateResponse
+    celebrity: SajuCalculateResponse
+    celebrity_info: CelebrityInfo
+    interpretation: str
+    disclaimer: str
+
+
 class ErrorResponse(BaseModel):
     error: str
     message: str

@@ -3,6 +3,7 @@ from __future__ import annotations
 import pytest
 from httpx import ASGITransport, AsyncClient
 
+from app.config import settings
 from app.engine.calculator import SajuCalculator
 from app.llm.client import LLMClient
 from app.services.cache_service import CacheService
@@ -24,6 +25,10 @@ async def client():
     from app.main import app
     from app import dependencies
 
+    # Disable token validation for integration tests
+    original_require_token = settings.require_service_token
+    settings.require_service_token = False
+
     # Initialize minimal dependencies without Redis/Anthropic
     dependencies._calculator = SajuCalculator()
     dependencies._llm_client = LLMClient(None)
@@ -33,6 +38,7 @@ async def client():
         dependencies._llm_client,
         dependencies._cache_service,
     )
+    from app.services.celebrity_service import CelebrityService
     from app.services.compatibility_service import CompatibilityService
     from app.services.fortune_service import FortuneService
 
@@ -46,7 +52,12 @@ async def client():
         dependencies._llm_client,
         dependencies._cache_service,
     )
+    dependencies._celebrity_service = CelebrityService(
+        dependencies._compatibility_service,
+    )
 
     transport = ASGITransport(app=app)
     async with AsyncClient(transport=transport, base_url="http://test") as ac:
         yield ac
+
+    settings.require_service_token = original_require_token

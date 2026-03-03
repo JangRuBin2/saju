@@ -12,7 +12,9 @@ from app.middleware.error_handler import (
     generic_error_handler,
     saju_error_handler,
 )
-from app.routers import compatibility, fortune, health, saju
+from app.middleware.rate_limiter import RateLimiterMiddleware
+from app.middleware.token_validator import TokenValidatorMiddleware
+from app.routers import celebrity, compatibility, fortune, health, saju
 
 logging.basicConfig(
     level=logging.INFO,
@@ -34,7 +36,8 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
+# Middleware (last added = first to execute)
+# Execution order: TokenValidator -> RateLimiter -> CORS -> route handler
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -42,6 +45,8 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+app.add_middleware(RateLimiterMiddleware)
+app.add_middleware(TokenValidatorMiddleware)
 
 # Error handlers
 app.add_exception_handler(SajuError, saju_error_handler)
@@ -51,4 +56,5 @@ app.add_exception_handler(Exception, generic_error_handler)
 app.include_router(health.router)
 app.include_router(saju.router)
 app.include_router(compatibility.router)
+app.include_router(celebrity.router)
 app.include_router(fortune.router)
