@@ -90,6 +90,12 @@ class CelebrityCompatibilityResponse(BaseModel):
     disclaimer: str
 
 
+class TimingResponse(BaseModel):
+    calculation: SajuCalculateResponse
+    interpretation: str
+    target_datetime: str
+
+
 class ErrorResponse(BaseModel):
     error: str
     message: str

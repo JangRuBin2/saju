@@ -1,7 +1,9 @@
 """Reading-type-specific prompt templates and lookup."""
 from __future__ import annotations
 
+from app.llm.prompts.relationship import RELATIONSHIP_PROMPTS
 from app.llm.prompts.saju_reading import SAJU_READING_PROMPT
+from app.llm.prompts.situation import SITUATION_PROMPTS
 
 LOVE_READING_PROMPT = """아래 사주 데이터를 분석하여 연애운에 특화된 해석을 제공해주세요.
 
@@ -126,6 +128,8 @@ READING_TYPE_PROMPTS: dict[str, str] = {
     "friendship_reading": FRIENDSHIP_READING_PROMPT,
     "marriage_reading": MARRIAGE_READING_PROMPT,
     "sinsal": SINSAL_READING_PROMPT,
+    **RELATIONSHIP_PROMPTS,
+    **SITUATION_PROMPTS,
 }
 
 

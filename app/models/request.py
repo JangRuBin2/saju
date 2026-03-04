@@ -1,8 +1,24 @@
 from __future__ import annotations
 
+from enum import Enum
+
 from pydantic import BaseModel, Field
 
 from app.models.common import CalendarType, Gender
+
+
+class RelationshipType(str, Enum):
+    LOVER = "lover"
+    BOSS = "boss"
+    CHILD = "child"
+    FRIEND = "friend"
+
+
+class SituationType(str, Enum):
+    CAREER_CHANGE = "career_change"
+    WEALTH_FLOW = "wealth_flow"
+    HIDDEN_TALENT = "hidden_talent"
+    PAST_LIFE = "past_life"
 
 
 class BirthInput(BaseModel):
@@ -50,4 +66,25 @@ class FortuneRequest(BaseModel):
 class CelebrityCompatibilityRequest(BaseModel):
     birth: BirthInput
     celebrity_id: str = Field(..., description="Celebrity unique ID (e.g. 'karina-aespa')")
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
+
+
+class RelationshipReadingRequest(BaseModel):
+    target_birth: BirthInput
+    relationship_type: RelationshipType
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
+
+
+class SituationReadingRequest(BaseModel):
+    birth: BirthInput
+    situation_type: SituationType
+    language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
+
+
+class TimingRequest(BaseModel):
+    birth: BirthInput
+    target_year: int | None = None
+    target_month: int | None = None
+    target_day: int | None = None
+    target_hour: int | None = Field(None, ge=0, le=23, description="Target hour (0-23)")
     language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
