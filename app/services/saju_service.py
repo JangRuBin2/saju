@@ -67,7 +67,9 @@ class SajuService:
 
         prompt_template = get_prompt_for_type(reading_type)
         prompt = prompt_template.format(saju_data=format_saju_for_prompt(saju))
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type=reading_type, language=language,
+        )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
         return saju, interpretation
@@ -83,7 +85,9 @@ class SajuService:
         saju = self.calculate(birth)
         prompt_template = get_prompt_for_type(reading_type)
         prompt = prompt_template.format(saju_data=format_saju_for_prompt(saju))
-        return saju, self._llm.generate_stream(prompt, language=language)
+        return saju, self._llm.generate_stream(
+            prompt, reading_type=reading_type, language=language,
+        )
 
     def saju_to_dict(self, saju: SajuData) -> dict:
         """Convert SajuData to a serializable dict matching SajuCalculateResponse."""

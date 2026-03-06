@@ -56,6 +56,7 @@ class CelebrityService:
         user_saju, celeb_saju, interpretation = await self._compat.analyze(
             person1=user_birth,
             person2=celeb_birth,
+            reading_type="celebrity_compatibility",
             prompt_template=CELEBRITY_COMPATIBILITY_PROMPT,
             prompt_kwargs={
                 "celebrity_name": celebrity.name_ko,

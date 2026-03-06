@@ -42,6 +42,7 @@ class CompatibilityService:
         person1: BirthInput,
         person2: BirthInput,
         *,
+        reading_type: str = "compatibility",
         prompt_template: str | None = None,
         prompt_kwargs: dict[str, str] | None = None,
         language: str = "ko",
@@ -51,6 +52,7 @@ class CompatibilityService:
         Args:
             person1: First person's birth input.
             person2: Second person's birth input.
+            reading_type: Reading type for model routing.
             prompt_template: Custom prompt template. Falls back to COMPATIBILITY_PROMPT.
             prompt_kwargs: Extra format kwargs merged into the prompt template.
             language: Response language code (e.g. 'ko', 'en', 'ja').
@@ -79,7 +81,9 @@ class CompatibilityService:
         if prompt_kwargs:
             format_args = {**format_args, **prompt_kwargs}
         prompt = template.format(**format_args)
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type=reading_type, language=language,
+        )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
         return saju1, saju2, interpretation

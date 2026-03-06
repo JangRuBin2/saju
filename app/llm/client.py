@@ -6,6 +6,7 @@ from collections.abc import AsyncIterator
 from anthropic import AsyncAnthropic
 
 from app.config import settings
+from app.llm.model_router import get_model_for_type
 from app.llm.prompts.system import SYSTEM_PROMPT
 from app.middleware.error_handler import LLMError
 
@@ -25,15 +26,22 @@ class LLMClient:
             return prompt
         return f"[IMPORTANT: You MUST respond entirely in {language}.]\n\n{prompt}"
 
-    async def generate(self, user_prompt: str, *, language: str = "ko") -> str:
+    async def generate(
+        self,
+        user_prompt: str,
+        *,
+        reading_type: str = "saju_reading",
+        language: str = "ko",
+    ) -> str:
         """Generate a complete response (non-streaming)."""
         if self._client is None:
             raise LLMError("Anthropic client not configured. Set ANTHROPIC_API_KEY.")
 
+        model = get_model_for_type(reading_type)
         final_prompt = self._apply_language(user_prompt, language)
         try:
             response = await self._client.messages.create(
-                model=settings.llm_model,
+                model=model,
                 max_tokens=settings.llm_max_tokens,
                 temperature=settings.llm_temperature,
                 system=[
@@ -53,16 +61,21 @@ class LLMClient:
             raise LLMError(f"LLM request failed: {exc}") from exc
 
     async def generate_stream(
-        self, user_prompt: str, *, language: str = "ko",
+        self,
+        user_prompt: str,
+        *,
+        reading_type: str = "saju_reading",
+        language: str = "ko",
     ) -> AsyncIterator[str]:
         """Generate a streaming response, yielding text chunks."""
         if self._client is None:
             raise LLMError("Anthropic client not configured. Set ANTHROPIC_API_KEY.")
 
+        model = get_model_for_type(reading_type)
         final_prompt = self._apply_language(user_prompt, language)
         try:
             async with self._client.messages.stream(
-                model=settings.llm_model,
+                model=model,
                 max_tokens=settings.llm_max_tokens,
                 temperature=settings.llm_temperature,
                 system=[

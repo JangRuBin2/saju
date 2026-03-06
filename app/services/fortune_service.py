@@ -95,7 +95,9 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_period=period_info,
         )
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type="monthly", language=language,
+        )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
         return saju, interpretation, target_date_str
@@ -130,7 +132,9 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_period=period_info,
         )
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type="daily", language=language,
+        )
 
         # Daily fortune cache until end of day
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
@@ -234,7 +238,9 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_time=time_info,
         )
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type="timing_now", language=language,
+        )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
         return saju, interpretation, target_dt_str
@@ -269,7 +275,9 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_time=hours_info,
         )
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type="timing_best_hours", language=language,
+        )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
         return saju, interpretation, target_date_str
@@ -304,7 +312,9 @@ class FortuneService:
             saju_data=format_saju_for_prompt(saju),
             target_time=time_info,
         )
-        interpretation = await self._llm.generate(prompt, language=language)
+        interpretation = await self._llm.generate(
+            prompt, reading_type="timing_dday", language=language,
+        )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
         return saju, interpretation, target_date_str
