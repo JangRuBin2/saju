@@ -5,6 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 
 from app.dependencies import get_compatibility_service, get_fortune_service, get_saju_service
+from app.llm.parser import parse_interpretation
 from app.llm.prompts.marriage import (
     MARRIAGE_AUSPICIOUS_DATES_PROMPT,
     MARRIAGE_FINANCE_PROMPT,
@@ -74,7 +75,7 @@ async def marriage_timing(
     return MarriageTimingResponse(
         person1=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         person2=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
     )
 
 
@@ -99,7 +100,7 @@ async def marriage_life_forecast(
     return MarriageTimingResponse(
         person1=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         person2=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
     )
 
 
@@ -124,7 +125,7 @@ async def marriage_finance(
     return MarriageTimingResponse(
         person1=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         person2=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
     )
 
 
@@ -154,5 +155,5 @@ async def marriage_auspicious_dates(
     return MarriageTimingResponse(
         person1=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         person2=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
     )

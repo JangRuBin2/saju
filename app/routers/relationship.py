@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from app.dependencies import get_saju_service
+from app.llm.parser import parse_interpretation
 from app.models.request import RelationshipReadingRequest
 from app.models.response import SajuCalculateResponse, SajuReadingResponse
 from app.services.saju_service import SajuService
@@ -17,10 +18,10 @@ async def relationship_reading(
 ) -> SajuReadingResponse:
     """Analyze a person's saju from a relationship perspective."""
     reading_type = f"relationship_{request.relationship_type.value}"
-    saju, interpretation = await service.reading(
+    saju, raw_text = await service.reading(
         request.target_birth, reading_type, language=request.language,
     )
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
     )

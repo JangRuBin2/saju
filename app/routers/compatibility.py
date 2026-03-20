@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi import APIRouter, Depends
 
 from app.dependencies import get_compatibility_service, get_saju_service
+from app.llm.parser import parse_interpretation
 from app.models.request import CompatibilityRequest
 from app.models.response import CompatibilityResponse, SajuCalculateResponse
 from app.services.compatibility_service import CompatibilityService
@@ -18,11 +19,11 @@ async def analyze(
     saju_service: SajuService = Depends(get_saju_service),
 ) -> CompatibilityResponse:
     """Analyze compatibility between two people."""
-    saju1, saju2, interpretation = await service.analyze(
+    saju1, saju2, raw_text = await service.analyze(
         request.person1, request.person2, language=request.language,
     )
     return CompatibilityResponse(
         person1=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         person2=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
     )

@@ -4,7 +4,10 @@ from datetime import date
 
 from fastapi import APIRouter, Depends
 
+from app.config import settings
 from app.dependencies import get_compatibility_service, get_fortune_service, get_saju_service
+from app.llm.formatter import format_saju_for_prompt
+from app.llm.parser import parse_interpretation
 from app.llm.prompts.pet import (
     PET_ADOPTION_TIMING_PROMPT,
     PET_COMPATIBILITY_PROMPT,
@@ -25,6 +28,7 @@ from app.models.response import (
     SajuCalculateResponse,
     SajuReadingResponse,
 )
+from app.services.cache_service import CacheService
 from app.services.compatibility_service import CompatibilityService
 from app.services.fortune_service import FortuneService
 from app.services.saju_service import SajuService
@@ -93,9 +97,6 @@ async def pet_reading(
     pet_info = _format_pet_info(request_body.pet)
 
     saju = service.calculate(birth)
-    from app.llm.formatter import format_saju_for_prompt
-    from app.services.cache_service import CacheService
-    from app.config import settings
 
     cache_key = CacheService.make_key(
         "pet_reading",
@@ -104,20 +105,20 @@ async def pet_reading(
     )
     cached = await service._cache.get(cache_key)
     if cached:
-        interpretation = cached
+        raw_text = cached
     else:
         prompt = PET_READING_PROMPT.format(
             saju_data=format_saju_for_prompt(saju),
             pet_info=pet_info,
         )
-        interpretation = await service._llm.generate(
+        raw_text = await service._llm.generate(
             prompt, reading_type="pet_reading", language=request_body.language,
         )
-        await service._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
+        await service._cache.set(cache_key, raw_text, ttl=settings.cache_ttl_interpretation)
 
     return PetReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
         pillars_used=_count_pillars(request_body.pet),
     )
 
@@ -132,7 +133,7 @@ async def pet_compatibility(
     pet_birth = _pet_to_birth_input(request_body.pet)
     pet_info = _format_pet_info(request_body.pet)
 
-    saju1, saju2, interpretation = await compat_service.analyze(
+    saju1, saju2, raw_text = await compat_service.analyze(
         request_body.owner,
         pet_birth,
         reading_type="pet_compatibility",
@@ -144,7 +145,7 @@ async def pet_compatibility(
     return PetCompatibilityResponse(
         owner=SajuCalculateResponse(**saju_service.saju_to_dict(saju1)),
         pet=SajuCalculateResponse(**saju_service.saju_to_dict(saju2)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
         pillars_used=_count_pillars(request_body.pet),
     )
 
@@ -163,10 +164,6 @@ async def pet_yearly_fortune(
     saju = service.calculate(birth)
     period_info = fortune_service._get_target_period_info(target_year, 6)
 
-    from app.llm.formatter import format_saju_for_prompt
-    from app.services.cache_service import CacheService
-    from app.config import settings
-
     cache_key = CacheService.make_key(
         "pet_yearly",
         y=birth.year, m=birth.month, d=birth.day, h=birth.hour,
@@ -174,21 +171,21 @@ async def pet_yearly_fortune(
     )
     cached = await service._cache.get(cache_key)
     if cached:
-        interpretation = cached
+        raw_text = cached
     else:
         prompt = PET_YEARLY_FORTUNE_PROMPT.format(
             saju_data=format_saju_for_prompt(saju),
             pet_info=pet_info,
             target_period=period_info,
         )
-        interpretation = await service._llm.generate(
+        raw_text = await service._llm.generate(
             prompt, reading_type="pet_yearly_fortune", language=request_body.language,
         )
-        await service._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
+        await service._cache.set(cache_key, raw_text, ttl=settings.cache_ttl_fortune)
 
     return PetReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
         pillars_used=_count_pillars(request_body.pet),
     )
 
@@ -205,10 +202,6 @@ async def pet_adoption_timing(
     saju = service.calculate(request_body.owner)
     period_info = fortune_service._get_target_period_info(target_year, 6)
 
-    from app.llm.formatter import format_saju_for_prompt
-    from app.services.cache_service import CacheService
-    from app.config import settings
-
     cache_key = CacheService.make_key(
         "pet_adoption",
         y=request_body.owner.year, m=request_body.owner.month,
@@ -218,18 +211,18 @@ async def pet_adoption_timing(
     )
     cached = await service._cache.get(cache_key)
     if cached:
-        interpretation = cached
+        raw_text = cached
     else:
         prompt = PET_ADOPTION_TIMING_PROMPT.format(
             saju_data=format_saju_for_prompt(saju),
             target_period=period_info,
         )
-        interpretation = await service._llm.generate(
+        raw_text = await service._llm.generate(
             prompt, reading_type="pet_adoption_timing", language=request_body.language,
         )
-        await service._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_fortune)
+        await service._cache.set(cache_key, raw_text, ttl=settings.cache_ttl_fortune)
 
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
     )

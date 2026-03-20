@@ -5,6 +5,7 @@ from datetime import datetime
 from fastapi import APIRouter, Depends
 
 from app.dependencies import get_fortune_service, get_saju_service
+from app.llm.parser import parse_interpretation
 from app.models.request import TimingRequest
 from app.models.response import SajuCalculateResponse, TimingResponse
 from app.services.fortune_service import FortuneService
@@ -32,7 +33,7 @@ async def timing_now(
     )
     return TimingResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
         target_datetime=target_dt,
     )
 
@@ -55,7 +56,7 @@ async def timing_best_hours(
     )
     return TimingResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
         target_datetime=target_date,
     )
 
@@ -78,6 +79,6 @@ async def timing_dday(
     )
     return TimingResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(interpretation),
         target_datetime=target_date,
     )

@@ -141,7 +141,7 @@ class TestCelebrityCompatibilityEndpoint:
         )
         assert response.status_code == 200
         data = response.json()
-        assert data["interpretation"] == "Test celebrity compatibility interpretation"
+        assert data["interpretation"]["summary"] == "Test celebrity compatibility interpretation"
         mock_generate.assert_called_once()
 
     async def test_compatibility_invalid_celebrity_id(self, client: AsyncClient):

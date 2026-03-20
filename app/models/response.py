@@ -3,6 +3,17 @@ from __future__ import annotations
 from pydantic import BaseModel
 
 
+class SectionResponse(BaseModel):
+    title: str
+    content: str
+
+
+class InterpretationResponse(BaseModel):
+    summary: str
+    sections: list[SectionResponse]
+    disclaimer: str | None = None
+
+
 class PillarResponse(BaseModel):
     gan: str
     zhi: str
@@ -50,18 +61,18 @@ class SajuCalculateResponse(BaseModel):
 
 class SajuReadingResponse(BaseModel):
     calculation: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
 
 
 class CompatibilityResponse(BaseModel):
     person1: SajuCalculateResponse
     person2: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
 
 
 class FortuneResponse(BaseModel):
     calculation: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
     target_date: str
 
 
@@ -86,33 +97,33 @@ class CelebrityCompatibilityResponse(BaseModel):
     user: SajuCalculateResponse
     celebrity: SajuCalculateResponse
     celebrity_info: CelebrityInfo
-    interpretation: str
+    interpretation: InterpretationResponse
     disclaimer: str
 
 
 class TimingResponse(BaseModel):
     calculation: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
     target_datetime: str
 
 
 class PetReadingResponse(BaseModel):
     calculation: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
     pillars_used: int
 
 
 class PetCompatibilityResponse(BaseModel):
     owner: SajuCalculateResponse
     pet: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
     pillars_used: int
 
 
 class MarriageTimingResponse(BaseModel):
     person1: SajuCalculateResponse
     person2: SajuCalculateResponse
-    interpretation: str
+    interpretation: InterpretationResponse
 
 
 class ErrorResponse(BaseModel):

@@ -6,6 +6,7 @@ from fastapi import APIRouter, Depends, Request
 from sse_starlette.sse import EventSourceResponse
 
 from app.dependencies import get_saju_service
+from app.llm.parser import parse_interpretation
 from app.models.request import SajuCalculateRequest, SajuReadingRequest, SinsalRequest
 from app.models.response import SajuCalculateResponse, SajuReadingResponse
 from app.services.saju_service import SajuService
@@ -35,12 +36,12 @@ async def reading(
     if request_body.stream:
         return await _streaming_reading(request_body, service, reading_type)
 
-    saju, interpretation = await service.reading(
+    saju, raw_text = await service.reading(
         request_body.birth, reading_type, language=request_body.language,
     )
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
     )
 
 
@@ -81,10 +82,10 @@ async def sinsal(
 ) -> SajuReadingResponse:
     """Sinsal (신살) analysis."""
     reading_type = getattr(request.state, "reading_type", "sinsal")
-    saju, interpretation = await service.reading(
+    saju, raw_text = await service.reading(
         request_body.birth, reading_type, language=request_body.language,
     )
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
     )

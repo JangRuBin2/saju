@@ -4,6 +4,7 @@ from fastapi import APIRouter, Depends, Query
 
 from app.data.celebrities import search_celebrities
 from app.dependencies import get_celebrity_service, get_saju_service
+from app.llm.parser import parse_interpretation
 from app.llm.prompts.celebrity_compatibility import CELEBRITY_DISCLAIMER
 from app.models.request import CelebrityCompatibilityRequest
 from app.models.response import (
@@ -43,7 +44,7 @@ async def celebrity_compatibility(
     saju_service: SajuService = Depends(get_saju_service),
 ) -> CelebrityCompatibilityResponse:
     """Analyze saju compatibility between user and a celebrity."""
-    user_saju, celeb_saju, celebrity, interpretation = (
+    user_saju, celeb_saju, celebrity, raw_text = (
         await service.analyze_compatibility(
             request.birth, request.celebrity_id, language=request.language,
         )
@@ -57,6 +58,6 @@ async def celebrity_compatibility(
             name_en=celebrity.name_en,
             group=celebrity.group,
         ),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
         disclaimer=CELEBRITY_DISCLAIMER,
     )

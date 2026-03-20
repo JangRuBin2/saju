@@ -5,6 +5,7 @@ from datetime import date
 from fastapi import APIRouter, Depends
 
 from app.dependencies import get_fortune_service, get_saju_service
+from app.llm.parser import parse_interpretation
 from app.models.request import FortuneRequest
 from app.models.response import FortuneResponse, SajuCalculateResponse
 from app.services.fortune_service import FortuneService
@@ -24,12 +25,12 @@ async def monthly_fortune(
     target_year = request.target_year or today.year
     target_month = request.target_month or today.month
 
-    saju, interpretation, target_date = await service.monthly(
+    saju, raw_text, target_date = await service.monthly(
         request.birth, target_year, target_month, language=request.language,
     )
     return FortuneResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
         target_date=target_date,
     )
 
@@ -46,11 +47,11 @@ async def daily_fortune(
     target_month = request.target_month or today.month
     target_day = request.target_day or today.day
 
-    saju, interpretation, target_date = await service.daily(
+    saju, raw_text, target_date = await service.daily(
         request.birth, target_year, target_month, target_day, language=request.language,
     )
     return FortuneResponse(
         calculation=SajuCalculateResponse(**saju_service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
         target_date=target_date,
     )

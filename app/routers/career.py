@@ -5,6 +5,7 @@ from fastapi import APIRouter, Depends
 from app.config import settings
 from app.dependencies import get_saju_service
 from app.llm.formatter import format_saju_for_prompt
+from app.llm.parser import parse_interpretation
 from app.llm.prompts.career import (
     CAREER_BURNOUT_PROMPT,
     CAREER_STARTUP_PROMPT,
@@ -75,27 +76,24 @@ async def _career_reading(
     )
     cached = await service._cache.get(cache_key)
     if cached:
-        return SajuReadingResponse(
-            calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-            interpretation=cached,
+        raw_text = cached
+    else:
+        format_args: dict[str, str] = {
+            "saju_data": format_saju_for_prompt(saju),
+            "career_info": _format_career_info(career_info),
+        }
+        if extra_prompt_kwargs:
+            format_args = {**format_args, **extra_prompt_kwargs}
+        prompt = prompt_template.format(**format_args)
+
+        raw_text = await service._llm.generate(
+            prompt, reading_type=reading_type, language=request_body.language,
         )
-
-    format_args: dict[str, str] = {
-        "saju_data": format_saju_for_prompt(saju),
-        "career_info": _format_career_info(career_info),
-    }
-    if extra_prompt_kwargs:
-        format_args = {**format_args, **extra_prompt_kwargs}
-    prompt = prompt_template.format(**format_args)
-
-    interpretation = await service._llm.generate(
-        prompt, reading_type=reading_type, language=request_body.language,
-    )
-    await service._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
+        await service._cache.set(cache_key, raw_text, ttl=settings.cache_ttl_interpretation)
 
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
-        interpretation=interpretation,
+        interpretation=parse_interpretation(raw_text),
     )
 
 
