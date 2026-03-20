@@ -1,6 +1,9 @@
 """Reading-type-specific prompt templates and lookup."""
 from __future__ import annotations
 
+from app.llm.prompts.career import CAREER_PROMPTS
+from app.llm.prompts.marriage import MARRIAGE_PROMPTS
+from app.llm.prompts.pet import PET_PROMPTS
 from app.llm.prompts.relationship import RELATIONSHIP_PROMPTS
 from app.llm.prompts.saju_reading import SAJU_READING_PROMPT
 from app.llm.prompts.situation import SITUATION_PROMPTS
@@ -130,6 +133,9 @@ READING_TYPE_PROMPTS: dict[str, str] = {
     "sinsal": SINSAL_READING_PROMPT,
     **RELATIONSHIP_PROMPTS,
     **SITUATION_PROMPTS,
+    **PET_PROMPTS,
+    **CAREER_PROMPTS,
+    **MARRIAGE_PROMPTS,
 }
 
 

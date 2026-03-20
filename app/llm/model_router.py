@@ -9,6 +9,14 @@ _PREMIUM_TYPES: frozenset[str] = frozenset({
     "compatibility",
     "celebrity_compatibility",
     "situation_career_change",
+    "career_transition",
+    "career_stay_or_go",
+    "career_startup",
+    "marriage_timing",
+    "marriage_life_forecast",
+    "marriage_finance",
+    "marriage_auspicious_dates",
+    "pet_compatibility",
 })
 
 # Standard tier: everything else uses Haiku

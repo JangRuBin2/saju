@@ -14,7 +14,7 @@ from app.middleware.error_handler import (
 )
 from app.middleware.rate_limiter import RateLimiterMiddleware
 from app.middleware.token_validator import TokenValidatorMiddleware
-from app.routers import celebrity, compatibility, fortune, health, relationship, saju, timing
+from app.routers import career, celebrity, compatibility, fortune, health, marriage, pet, relationship, saju, timing
 
 logging.basicConfig(
     level=logging.INFO,
@@ -60,3 +60,6 @@ app.include_router(celebrity.router)
 app.include_router(fortune.router)
 app.include_router(relationship.router)
 app.include_router(timing.router)
+app.include_router(pet.router)
+app.include_router(career.router)
+app.include_router(marriage.router)

@@ -96,6 +96,25 @@ class TimingResponse(BaseModel):
     target_datetime: str
 
 
+class PetReadingResponse(BaseModel):
+    calculation: SajuCalculateResponse
+    interpretation: str
+    pillars_used: int
+
+
+class PetCompatibilityResponse(BaseModel):
+    owner: SajuCalculateResponse
+    pet: SajuCalculateResponse
+    interpretation: str
+    pillars_used: int
+
+
+class MarriageTimingResponse(BaseModel):
+    person1: SajuCalculateResponse
+    person2: SajuCalculateResponse
+    interpretation: str
+
+
 class ErrorResponse(BaseModel):
     error: str
     message: str
