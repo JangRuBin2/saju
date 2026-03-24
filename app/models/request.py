@@ -48,6 +48,8 @@ class SajuReadingRequest(BaseModel):
     birth: BirthInput
     stream: bool = Field(False, description="Enable SSE streaming")
     language: str = Field("ko", description="Response language (e.g. 'ko', 'en', 'ja', 'English')")
+    counselor_id: str | None = Field(None, description="Virtual counselor ID (e.g. 'master-yoon')")
+    custom_system_prompt: str | None = Field(None, description="Custom system prompt from admin DB (overrides default)")
 
 
 class SinsalRequest(BaseModel):

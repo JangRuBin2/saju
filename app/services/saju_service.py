@@ -47,6 +47,8 @@ class SajuService:
         reading_type: str = "saju_reading",
         *,
         language: str = "ko",
+        counselor_id: str | None = None,
+        custom_system_prompt: str | None = None,
     ) -> tuple[SajuData, str]:
         """Calculate and generate full interpretation."""
         saju = self.calculate(birth)
@@ -59,6 +61,7 @@ class SajuService:
             true_solar_time=birth.use_true_solar_time,
             reading_type=reading_type,
             lang=language,
+            counselor=counselor_id or "default",
         )
 
         cached = await self._cache.get(cache_key)
@@ -68,7 +71,10 @@ class SajuService:
         prompt_template = get_prompt_for_type(reading_type)
         prompt = prompt_template.format(saju_data=format_saju_for_prompt(saju))
         interpretation = await self._llm.generate(
-            prompt, reading_type=reading_type, language=language,
+            prompt,
+            reading_type=reading_type,
+            language=language,
+            custom_system_prompt=custom_system_prompt,
         )
 
         await self._cache.set(cache_key, interpretation, ttl=settings.cache_ttl_interpretation)
@@ -80,13 +86,18 @@ class SajuService:
         reading_type: str = "saju_reading",
         *,
         language: str = "ko",
+        counselor_id: str | None = None,
+        custom_system_prompt: str | None = None,
     ) -> tuple[SajuData, AsyncIterator[str]]:
         """Calculate and stream interpretation."""
         saju = self.calculate(birth)
         prompt_template = get_prompt_for_type(reading_type)
         prompt = prompt_template.format(saju_data=format_saju_for_prompt(saju))
         return saju, self._llm.generate_stream(
-            prompt, reading_type=reading_type, language=language,
+            prompt,
+            reading_type=reading_type,
+            language=language,
+            custom_system_prompt=custom_system_prompt,
         )
 
     def saju_to_dict(self, saju: SajuData) -> dict:

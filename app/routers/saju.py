@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 
-from fastapi import APIRouter, Depends, Request
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sse_starlette.sse import EventSourceResponse
 
 from app.dependencies import get_saju_service
@@ -12,6 +12,16 @@ from app.models.response import SajuCalculateResponse, SajuReadingResponse
 from app.services.saju_service import SajuService
 
 router = APIRouter(prefix="/api/v1/saju", tags=["saju"])
+
+
+def _validate_counselor_request(request_body: SajuReadingRequest) -> None:
+    """counselor_id가 있으면 custom_system_prompt가 반드시 있어야 한다."""
+    if request_body.counselor_id and not request_body.custom_system_prompt:
+        raise HTTPException(
+            status_code=400,
+            detail="custom_system_prompt is required when counselor_id is provided. "
+                   "The BFF must supply the persona prompt from the database.",
+        )
 
 
 @router.post("/calculate", response_model=SajuCalculateResponse)
@@ -31,13 +41,19 @@ async def reading(
     service: SajuService = Depends(get_saju_service),
 ):
     """Full saju reading with LLM interpretation. Supports SSE streaming."""
+    _validate_counselor_request(request_body)
+
     reading_type = getattr(request.state, "reading_type", "saju_reading")
 
     if request_body.stream:
         return await _streaming_reading(request_body, service, reading_type)
 
     saju, raw_text = await service.reading(
-        request_body.birth, reading_type, language=request_body.language,
+        request_body.birth,
+        reading_type,
+        language=request_body.language,
+        counselor_id=request_body.counselor_id,
+        custom_system_prompt=request_body.custom_system_prompt,
     )
     return SajuReadingResponse(
         calculation=SajuCalculateResponse(**service.saju_to_dict(saju)),
@@ -51,7 +67,11 @@ async def _streaming_reading(
     reading_type: str = "saju_reading",
 ) -> EventSourceResponse:
     saju, text_stream = await service.reading_stream(
-        request.birth, reading_type, language=request.language,
+        request.birth,
+        reading_type,
+        language=request.language,
+        counselor_id=request.counselor_id,
+        custom_system_prompt=request.custom_system_prompt,
     )
 
     async def event_generator():

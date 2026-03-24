@@ -26,12 +26,17 @@ class LLMClient:
             return prompt
         return f"[IMPORTANT: You MUST respond entirely in {language}.]\n\n{prompt}"
 
+    def _resolve_system_prompt(self, custom_system_prompt: str | None) -> str:
+        """Return the custom prompt if provided, otherwise the default."""
+        return custom_system_prompt if custom_system_prompt else SYSTEM_PROMPT
+
     async def generate(
         self,
         user_prompt: str,
         *,
         reading_type: str = "saju_reading",
         language: str = "ko",
+        custom_system_prompt: str | None = None,
     ) -> str:
         """Generate a complete response (non-streaming)."""
         if self._client is None:
@@ -39,6 +44,7 @@ class LLMClient:
 
         model = get_model_for_type(reading_type)
         final_prompt = self._apply_language(user_prompt, language)
+        system_prompt = self._resolve_system_prompt(custom_system_prompt)
         try:
             response = await self._client.messages.create(
                 model=model,
@@ -47,7 +53,7 @@ class LLMClient:
                 system=[
                     {
                         "type": "text",
-                        "text": SYSTEM_PROMPT,
+                        "text": system_prompt,
                         "cache_control": {"type": "ephemeral"},
                     }
                 ],
@@ -66,6 +72,7 @@ class LLMClient:
         *,
         reading_type: str = "saju_reading",
         language: str = "ko",
+        custom_system_prompt: str | None = None,
     ) -> AsyncIterator[str]:
         """Generate a streaming response, yielding text chunks."""
         if self._client is None:
@@ -73,6 +80,7 @@ class LLMClient:
 
         model = get_model_for_type(reading_type)
         final_prompt = self._apply_language(user_prompt, language)
+        system_prompt = self._resolve_system_prompt(custom_system_prompt)
         try:
             async with self._client.messages.stream(
                 model=model,
@@ -81,7 +89,7 @@ class LLMClient:
                 system=[
                     {
                         "type": "text",
-                        "text": SYSTEM_PROMPT,
+                        "text": system_prompt,
                         "cache_control": {"type": "ephemeral"},
                     }
                 ],
